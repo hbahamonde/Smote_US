@@ -363,29 +363,38 @@ Within the predictive model framework, several machine learning approaches can b
 
 \paragraph{Na\"ive Bayes Method} Na\"ive Bayes methods are a set of supervised learning algorithms that apply Bayes' theorem with the ``naive'' assumption that all features of an individual are independent. Bayes' theorem provides a rule to calculate the conditional probability of an event given some prior knowledge. This method allows estimating the joint probability distribution of a feature vector as the product of the unidimensional distribution probabilities of each feature \parencite{wolff2019machine}. In this application the \emph{GaussianNB} module from \emph{Sklearn} \texttt{Python} library implements the Gaussian Naive Bayes algorithm. The likelihood of the features is assumed to be Gaussian.
 
-\subsection{Classification Performance Metrics} We illustrate the chosen metrics with the liberal classification machines only---the conservative situation is identical\todo{decia straightforward}. At the end of each cross-validation fold, two different vectors are produced: $y_{test}$ corresponding to the actual responses given by survey participants to the liberal question (restricted to the fold used for testing), and $y_{pred}$ corresponding to the predicted answers given by the model for the input features. With these two vectors at hand it is possible to compute the following quantities:
+\subsection{Classification Performance Metrics} We illustrate the chosen sensitivity metrics with the liberal classification machines only---the conservative situation is identical\todo{decia straightforward}. At the end of each cross-validation fold, two different vectors are produced: $y_{test}$ corresponding to the actual responses given by survey participants to the liberal question (restricted to the fold used for testing), and $y_{pred}$ corresponding to the predicted answers given by the model for the input features. With these two vectors at hand it is possible to compute the following quantities:
 
 \begin{itemize}
-\item True positive counts (tp): number of participants such that the model predicts as very liberal and they actually belong to the very liberal class
-\item True negative counts (tn): number of participants such that the model predicts as not very liberal and they do not belong to the very liberal class
-\item False positive counts (fp): number of participants such that the model predicts as very liberal but they do not belong to the very liberal class
-\item False negative counts (fn): number of participants such that the model predicts as not very liberal but they actually belong to the very liberal class
+\item True positive counts (TP): number of survey participants such that the model predicts as very liberal and they actually belong to the very liberal class.
+\item True negative counts (TN): number of survey participants such that the model predicts as not very liberal and they do not belong to the very liberal class.
+\item False positive counts (FP): number of survey participants such that the model predicts as very liberal but they do not belong to the very liberal class.
+\item False negative counts (FN): number of survey participants such that the model predicts as not very liberal but they actually belong to the very liberal class.
 \end{itemize}
-with this numbers, we compute the Recall or sensitivity $R$\footnote{The fraction of examples classified as very liberal, among the total number of very liberal examples.}, the positive predictive value $PPV$ or precision\footnote{The fraction of true very liberal examples among the examples that the model classified as very liberal.} and the $f$-score\footnote{A perfect model has an $f$-score of 1.} with the relationships
-$$
-R=\frac{tp}{tp+fn},\quad PPV=\frac{tp}{tp+fp},\quad F=\frac{2}{1/R+1/PPV},
-$$
-and finally report the average and the standard deviation across all cross-validation folds. Notice one could use the accuracy metric defined as
-$$
-A = \frac{tp+tn}{tp+tn+fp+fn}=\frac{tp+tn}{\text{size of the fold}},
-$$
-but considering that the dataset is strongly imbalanced, previous measures are more informative. Another metric widely used to compare binary classifiers \parencite{wolff2019machine,artetxe2020balanced} is the Receiver Operating Curve or ROC, which corresponds to a plot of sensitivity $R$ versus the false positive rate
-$
-FPR = \frac{fp}{fp+tn}.
-$
-ROC is computed as a probability curve and, and the area under ROC curve of AUC represents the degree of separability. In other words, it quantifies in a number how much the model is capable of distinguishing between classes. In our setting, the higher the AUC, the better the model is at predicting liberals as liberals and non liberals as non liberals. Remark that (i) a perfect model has AUC equals to 1, (ii) a model with AUC approximately 0, means that the model is actually reciprocating the classes, therefore a simple relabelling is enough to get good results; and (iii) the worst case scenario is when the AUC equals 0.5, meaning that the model has no class separation capacity.
 
-The methodology we use to compute previously explained metrics is as follows: at each fold test, we use the remaining folds as training dataset. Since the resulting training data set is imbalanced, we use the oversampling technique SMOTE with five neighbors on the minority class. Remark that the test set remains imbalanced which has some consequences. In particular, even one misclassified sample translates into large reductions of the performance measures. Moreover, the number of remaining liberal samples in each fold depends on the number of folds, thus having consequences in the imbalance ratio. We report results with decreasing number of RVC folds in order to test the stability of the results.
+With these numbers, the recall (\emph{R})---or model sensitivity---was computed.\footnote{The fraction of examples classified as very liberal, among the total number of very liberal examples.} Particularly, the positive predictive value (\emph{PPV}) or ``precision''\footnote{The fraction of true very liberal examples among the examples that the model classified as very liberal.} as well as the \emph{f}-score were computed considering the following relationships,\footnote{A perfect model has an $f$-score of 1.}
+
+\begin{equation}\label{eq:1}
+R=\frac{TP}{TP+FN},\quad PPV=\frac{TP}{TP+FP},\quad f=\frac{2}{\frac{1}{R}+\frac{1}{PPV}}.
+\end{equation}
+
+The average and the standard deviation across all cross-validation folds are also reported in \autoref{tab:f_auc}. 
+
+An alternative metric is the accuracy metric (\emph{A}) defined as,
+
+\begin{equation}\label{eq:2}
+A = \frac{TP+TN}{TP+TN+FP+FN}=\frac{TP+TN}{\text{size of the fold}}.
+\end{equation}
+
+However, considering that the data are strongly imbalanced, metrics defined in \autoref{eq:1} and \autoref{eq:2} are more informative. Another metric widely used to compare binary classifiers is the Receiver Operating Curve (\emph{ROC}) \parencite{wolff2019machine,artetxe2020balanced} which plots sensitivity \emph{R} defined in \autoref{eq:1} against the false positive rate (FPR) defined as follows,
+
+\begin{equation}
+FPR = \frac{FP}{FP+TN}.
+\end{equation}
+
+The ROC metric is computed as a probability curve, and the area under the ROC curve represents the degree of separability. In other words the ROC quantifies how much the model is capable of distinguishing between classes. In this application the higher the area under the curve, the better the model is at predicting liberals as liberals and non liberals as non liberals. Remark that (1) a perfect model has an area under curve of 1, (2) a model with an area under the curve of 0 implies that the model is actually reciprocating the classes, therefore simply relabeling is enough to get good results; and (3) the worst-case scenario is when the area under the curve equals 0.5, meaning that the model has no class separation capacity.
+
+To actually compute these metrics every fold test is compared \todo{compared, ta bn?} against the remaining folds as training dataset. Since the resulting training data set is imbalanced, the SMOTE oversampling technique with five neighbors on the minority class is used. \todo{here} Remark that the test set remains imbalanced which has some consequences. In particular, even one misclassified sample translates into large reductions of the performance measures. Moreover, the number of remaining liberal samples in each fold depends on the number of folds, thus having consequences in the imbalance ratio. We report results with decreasing number of RVC folds in order to test the stability of the results.
 
 \section{Results}
 
@@ -394,6 +403,7 @@ Tables~\ref{tab:r_ppv} and~\ref{tab:f_auc} show the results for  metrics mention
 If we test the performance of each methods we find some differences, specially on the PPV, f-Score and AUC metrics. SVM with RBF kernel is above SVM Linear, MLP, and NB independently of the number of folds. On the other hand, the recall metric (R), shown in Table~\ref{tab:r_ppv} (left), shows no sufficient evidence to affirm that methods perform differently. Indeed, applying an F-test over the different type of machines for the each folds number we find no strong statistical evidence, and it would depend on the confidence level whether or not we reject the null hypothesis  (for instance, the p-value es approx $0.026$ for 10 folds). However, the result changes dramatically, if we discard the MLP model which performs below any other model ($p\approx0.77$ for 10 folds). We conclude that according to the recall metric, all methods except for MLP have similar performance. Figure 2 shows the ROC curves for all approaches in the case of RCV with 5 folders.
 
 The f-scores shown in Table~\ref{tab:f_auc} confirm that SVM with RBF kernel improves over SVM Linear, MLP and NB regardless of RCV number of folders. An F-test carried out over these results confirms that the performance differences between predictive models are statistically significant  ($p\approx0.002$) . Specific one-sided t-tests comparing each pair of modeling approaches confirms that SVM with RBF kernel perform better than SVM Linear, MLP and NB. However, the superiority of SVM with RBF kernel relative to MLP is less pronounced ($p\approx0.05$). On the contrary, the effect is more pronounced for the AUC metric. The F-test carried out over these results confirms ($p\ll0.001$), t-test pairwise tests ($p<0.001$). 
+
 \begin{table}[!htbp]
 \centering
 \footnotesize
@@ -433,6 +443,7 @@ nfolds & SVM (linear) & SVM (RBF) & MLP & NB
 \bottomrule
 \end{tabular}
 \end{table}
+
 
 \begin{table}[!htbp]
 \centering
